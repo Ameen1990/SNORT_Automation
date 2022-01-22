@@ -65,12 +65,6 @@
  
 
 
-
- #  - name: install SNORT IDS
- #    tags: IDS
- #    shell: cd /root & wget https://www.snort.org/downloads/snort/snort-2.9.19-1.centos.x86_64.rpm
-
-
    - name: Get SNORT IDS Link
      tags: IDS  
      get_url:
@@ -85,7 +79,7 @@
        chdir: /root
 
 
-   - name: tunning
+   - name: Updating the shared libraries
      tags: setttings
      shell: ldconfig
 
@@ -113,7 +107,10 @@
      
    - name: Set the ownership for the new directories accordingly.
      tags: ownership
-     shell: chown -R snort:snort /etc/snort && chown -R snort:snort /var/log/snort && chown -R snort:snort /usr/local/lib/snort_dynamicrules
+     shell: | 
+       chown -R snort:snort /etc/snort
+       chown -R snort:snort /var/log/snort
+       chown -R snort:snort /usr/local/lib/snort_dynamicrules
      
 
 
@@ -207,12 +204,11 @@
      tags: ins-8, insert
      lineinfile:
        path: /etc/snort/snort.conf
-       regexp: '^##include $RULE_PATH/local.rules' # this will not work and will add it will apedn the line to the end,coz two hash cannot be dealt with maybe.
-       line: 'include $RULE_PATH/local.rules'
-       line: "include $RULE_PATH/local.rules  \n include $RULE_PATH/community.rules"  
+       regexp: '^#include $RULE_PATH/local.rules'
+       line: "include $RULE_PATH/local.rules"  
 
 
-   - name: Config SNORT to finction as Inline
+   - name: Config SNORT to function as Inline mode
      tags: inline
      lineinfile:
        path: /etc/snort/snort.conf
@@ -271,55 +267,6 @@
 #       rm -rf -R /var//log/snort -y
        
 
+# Downlaod other rules using onikode
 
-
-
-
-# Testing the configuration Abscnitt
-
-# date issue , reboot safe
-
-# sudo snort -A console -i eth0 -u snort -g snort -c /etc/snort/snort.conf
-
-
-# nano /etc/sysctl.conf
-# disable source forwarding
-# nano /etc/sysctl.conf
-#  net.ipv4.conf.all.rp_filter = 1
-# nano /etc/firewalld/firewalld.conf
-# it is already configured by defauls "IPv6_rpfilter=yes"
-
-
-# sysctl -p
-# /etc/rc.d/init.d/network restart
-
-# iptables -A INPUT -p tcp --dport 22 -j ACCEPT   [to allow out putty SSH terminal]
-# [root@server ~]# iptables -P INPUT DROP   [to drop everything else]
-
-
- # iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport 80 -j ACCEPT
- # service iptables save
- # service iptables restart
-# Accept packets from trusted IP addresses
-
-# Baisc soultion (MAC filter), works in small LAN network, won't work for WAN network
-# iptables -A INPUT -s 192.168.0.4 -m mac --mac-source 00:50:8D:FD:E6:32 -j ACCEPT
-
-
-
-
-
-
-# ANother example
-# iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
-# iptables -A INPUT -p tcp -m state --state NEW -m tcp --dport 80 -j ACCEPT
-
-
-# TuxCut is a utility that protect linux computers againest arpspoof attacks
-# yum install tuxcut
-
-# Reference Doko Datei
-# https://upcloud.com/community/tutorials/installing-snort-on-centos/
-
-# https://wiki.centos.org/HowTos/Network/IPTables
-
+# wget https://www.snort.org/rules/snortrules-snapshot-29190.tar.gz?oinkcode=97aa971f0be503276d217d10583de62a4de66b84 -O ~/registered.tar.gz
