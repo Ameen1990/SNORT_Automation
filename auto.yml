@@ -27,9 +27,6 @@
          - chrony
          - telnet
          - iptables-services
-         - gcc
-         - scl-utils
-         - centos-release-scl
        state: present
 
    - name: install several packages after deleting iptables
@@ -46,187 +43,230 @@
          - dracut
          - firewalld
          - iptables-services
-         - mlocate
        state: present
 
 
-   - name: configure NTP
-     tags: NTP
+   - name: Install essential packages for SNORT IDS
+     tags: essentials
+     yum: 
+       name: 
+         - flex
+         - bison
+         - zlib
+         - libpcap
+         - pcre
+         - libdnet
+         - libnghttp2
+         - daq
+         - libdnet-devel
+         - libdnet
+         - mlocate
+       state: latest
+ 
+
+
+   - name: Get SNORT IDS Link
+     tags: IDS  
+     get_url:
+       url: https://www.snort.org/downloads/snort/snort-2.9.19-1.centos.x86_64.rpm
+       dest: /root
+
+
+   - name: install SNORT IDS
+     tags: IDS
+     shell: yum localinstall snort-2.9.19-1.centos.x86_64.rpm -y
+     args:
+       chdir: /root
+
+
+   - name: Updating the shared libraries
+     tags: setttings
+     shell: ldconfig
+
+
+# It says already exists, it seems if you seems install snort with yum, user and group are auto generated.
+ #  - name: Creating new group and user 
+ #    tags: user
+ #    shell: groupadd snort && useradd snort -r -s /sbin/nologin -c SNORT_IDS -g snort
+
+
+
+   - name: Create the folder structure to house the Snort configuration.
+     tags: structure, NTP
      shell: |
+       mkdir /usr/local/lib/snort_dynamicrules   
        updatedb      
        timedatectl set-ntp true
        timedatectl set-timezone Europe/Berlin
+    # mkdir -p /etc/snort/rules # Already exists
+    # mkdir /var/log/snort &&   # Already exists
+
+   - name: Set the permissions for the new directories accordingly.
+     tags: permissions
+     shell: chmod -R 5775 /etc/snort && chmod -R 5775 /var/log/snort && chmod -R 5775 /usr/local/lib/snort_dynamicrules 
+     
+   - name: Set the ownership for the new directories accordingly.
+     tags: ownership
+     shell: | 
+       chown -R snort:snort /etc/snort
+       chown -R snort:snort /var/log/snort
+       chown -R snort:snort /usr/local/lib/snort_dynamicrules
+     
 
 
-
-   - name: Install essential Packages to run "thc-ipv6" repo Toolkit
-     tags: thc
-     yum: 
-       name: 
-         - libpcap-devel
-         - openssl-devel
-         - libnetfilter_queue-devel
-         - gcc
-       state: present
-
-
-   - name: Clone thc-ipv6 github repository
-     tags: thc
-     git:
-       repo: https://github.com/vanhauser-thc/thc-ipv6.git
-       dest: /root/hacker-tool
-       clone: yes
-       update: yes
-
-
-   - name: Play around withing the repo 
-     tags: thc
-     shell: make all && make install
-     args:
-       chdir: /root/hacker-tool
-
-   - name: Create attack script 
-     tags: thc
-     ansible.builtin.template:
-       src: /root/DS-Lite_Test_Bed/files/attack.txt
-       dest: /root/attack.sh
-       owner: root
-       mode: '755'
-
-
-   - name: install several essential packages for thc-hydra
-     tags: hydra
-     yum: 
-       name: 
-         - dnf
-         - libssh-devel
-         - pcre-devel
-         - gtk2-devel
-         - mariadb-devel
-         - postgresql-devel
-         - libsvm-devel
-         - libgcrypt-devel
-         - desktop-file-utils
-       state: present
-   
-   - name: Clone "thc-hydra" github repository
-     tags: hydra
-     git:
-       repo: https://github.com/vanhauser-thc/thc-hydra
-       dest: /root/hydra
-       clone: yes
-       update: yes
-
-   - name: Play around withing the repo 
-     tags: hydra
+   - name: Create new files for the white and blacklists as well as the local rules. 
+     tags: lists
      shell: |
-       dnf --enablerepo=powertools install libidn-devel -y
-       ./configure
-       make
-       make install
-     args:
-       chdir: /root/hydra
+       touch /etc/snort/rules/white_list.rules
+       touch /etc/snort/rules/black_list.rules
+       touch /etc/snort/rules/local.rules
+       touch /etc/snort/preproc_rules
+       
 
 
-   - name: Create hydra attack script 
-     tags: hydra
-     ansible.builtin.template:
-       src: /root/DS-Lite_Test_Bed/files/attack-2.txt
-       dest: /root/attack-2.sh
-       owner: root
-       mode: '755'
+   - name: download the detection rules & Grabbing the community rules
+     tags: det-rules 
+     get_url:
+       url: https://www.snort.org/rules/community
+       dest: ~/community.tar.gz
 
-   - name: Download the pre-compiled version of Dns64perf++ tool
-     tags: dns64
-     shell: wget rs1.sze.hu/~lencse/p101-dns64perfpp-a.tgz
-     args:
-       chdir: /root/
-   
-   - name: extract the compressed file
-     tags: dns64
-     shell: tar -xvf p101-dns64perfpp-a.tgz
-     args:
-       chdir: /root/
+   - name: copy original conf file
+     tags: insert
+     shell: cp /etc/snort/snort.conf /root/backup.conf
 
 
-    
-   - name: install several essential packages for dns64
-     tags: dns64
-     yum: 
-       name: 
-         - centos-release-scl
-         - llvm-toolset-7
-       state: present
-
-# in case of erros while running the last module: -
-
-# make
-# make -std=c++1y -pedantic
-# make install
-# make install -std=c++1y -pedantic
-
-
-
-   - name: Play around within the repo 
-     tags: dns64
+   - name: Extract the rules and copy them to my configuration folder. 
+     tags: extract
      shell: |
-       scl enable llvm-toolset-7 bash
-       yum install clang -y
-       make
-       sleep 5 # wait till make stuff is finished
-       make install
-     args:
-       chdir: /root/dns64perfpp-a
-
-   - name: Create dns64perf++ attacking script 
-     tags: dns64
-     ansible.builtin.template:
-       src: /root/DS-Lite_Test_Bed/files/attack-3.txt
-       dest: /root/attack-3.sh
-       owner: root
-       mode: '755'
+       tar -xvf ~/community.tar.gz -C ~/
+       cp ~/community-rules/* /etc/snort/rules
+       sed -i 's/include \$RULE\_PATH/#include \$RULE\_PATH/' /etc/snort/snort.conf
 
 
-   - name: Solve an issue of "GLIBCXX_3.4.21 not found" part 1
-     tags: dns64
-     shell: |
-       wget https://repo.anaconda.com/archive/Anaconda3-2019.07-Linux-x86_64.sh
-     args:
-       chdir: /root/
+# last command to comment out some useless lines within the conf file
+# They are related to rule files which are not included in the community rules
 
-   - name: Solve an issue of "GLIBCXX_3.4.21 not found" part 2
-     tags: dns64
-     shell: |
-       sh Anaconda3-2019.07-Linux-x86_64.sh
-       cp anaconda3/lib/libstdc++.so.6.0.26 /usr/lib64
-       rm /usr/lib64/libstdc++.so.6
-       ln -s /usr/lib64/libstdc++.so.6.0.26 /usr/lib64/libstdc++.so.6
-     args:
-       chdir: /root/
 
-   - name: Solve an issue of "too many open files" part 1 insert line "/etc/security/limits.conf"
-     tags: files
+
+   - name: Insert line in a file
+     tags: ins-1, insert
      lineinfile:
-       path: /etc/security/limits.conf
-       regexp: '^#<domain>        <type>  <item>  <value>'
-       line: '<domain>        <type>  <item>  <value> \n root         hard    nofile  1000000'
+       path: /etc/snort/snort.conf
+       regexp: '^ipvar HOME_NET '
+       line: 'ipvar HOME_NET 2001:db8:0:1::0/64'
+     
+
+   - name: Insert line in a file
+     tags: ins-2, insert
+     lineinfile:
+       path: /etc/snort/snort.conf
+       regexp: '^ipvar EXTERNAL_NET any'
+       line: 'ipvar EXTERNAL_NET !$HOME_NET'
+     
+   - name: Insert line in a file
+     tags: ins-3, insert
+     lineinfile:
+       path: /etc/snort/snort.conf
+       regexp: '^var SO_RULE_PATH ../so_rules'
+       line: 'var SO_RULE_PATH /etc/snort/so_rules'
+    
+
+   - name: Insert line in a file
+     tags: ins-4, insert
+     lineinfile:
+       path: /etc/snort/snort.conf
+       regexp: '^var PREPROC_RULE_PATH ../preproc_rules'
+       line: 'var PREPROC_RULE_PATH /etc/snort/preproc_rules'
+
+   - name: Insert line in a file
+     tags: ins-5, insert
+     lineinfile:
+       path: /etc/snort/snort.conf
+       regexp: '^var WHITE_LIST_PATH ../rules'
+       line: 'var WHITE_LIST_PATH /etc/snort/rules'
 
 
-   - name: Solve an issue of "too many open files" part 2
-     tags: files
+   - name: Insert line in a file
+     tags: ins-6, insert
+     lineinfile:
+       path: /etc/snort/snort.conf
+       regexp: '^var BLACK_LIST_PATH ../rules'
+       line: 'var BLACK_LIST_PATH /etc/snort/rules'
+
+   - name: Insert line in a file
+     tags: ins-7, insert
+     lineinfile:
+       path: /etc/snort/snort.conf
+       regexp: '^# output unified2: filename merged.log, limit 128, nostamp, mpls_event_types, vlan_event_types'
+       line: 'output unified2: filename snort.log, limit 128'
+
+   - name: Insert line in a file
+     tags: ins-8, insert
+     lineinfile:
+       path: /etc/snort/snort.conf
+       regexp: '^#include $RULE_PATH/local.rules'
+       line: "include $RULE_PATH/local.rules"  
+
+
+   - name: Config SNORT to function as Inline mode
+     tags: inline
+     lineinfile:
+       path: /etc/snort/snort.conf
+       line: "config daq: afpacket  \n config daq_mode: inline \n config policy_mode: inline \n config daq_var: buffer_size_mb:128"  
+
+# config daq_dir: /usr/local/lib/daq  (this pacth in questionable)
+
+   - name: Sonort Validating 
+     tags: link, test
      shell: |
-       ulimit -n 65536 
+       ln -s /usr/lib64/libdnet.so.1.0.1 /usr/lib64/libdnet.1
+       snort -T -i ens34:ens35 -c /etc/snort/snort.conf
+
+
+# Wenn man inline mode nutzen möchtet, dann muss man zwei interfaces angeben.
+
+#       snort -A console -q -i ens34:ens35 -c /etc/snort/snort.conf -K ascii
+# -q quite mode, not to bother with many bullshit.
+# -K ascii to log results in different manner in addition to the normanl log.
 
 
 
+   - name: Running Snort in the background
+     tags: background
+     shell: |
+       systemctl daemon-reload
+       systemctl enable snortd
+       systemctl start snortd
 
-# auto-script part
+   - name: Creteing routing file
+     tags: routing
+     shell: |
+       cd 
+       touch networking.sh
+       chmod a+x networking.sh
+       
+   - name: Edit "networking.sh" file
+     tags: routing
+     lineinfile:
+       path: /root/networking.sh
+       line: " #!/bin/bash \n echo 1 > /proc/sys/net/ipv4/ip_forward \n echo 1 > /proc/sys/net/ipv6/conf/all/forwarding \n ip link add name ipip6 type ip6tnl local 2001:db8:0:1::1 remote 2001:db8:0:1::2 mode any dev ens34 \n ip link set dev ipip6 up \n ip route add 10.0.0.0/24 dev ipip6 \n iptables -F \n iptables -X \n ip6tables -F \n ip6tables -X \n iptables -t nat -A POSTROUTING -o ens35 -j MASQUERADE"  
 
-   - name: Create auto-script to aitomate dns64perf++ Attack
-     tags: xdns64
-     ansible.builtin.template:
-       src: /root/DS-Lite_Test_Bed/files/auto-attack.txt
-       dest: /root/auto-attack.sh
-       owner: root
-       mode: '755'
 
+   - name: Run networking.sh
+     tags: routing
+     shell: |
+       cd 
+       ./networking.sh
+
+#   - name: SNORT & sein Abhängigkeiten löschen
+#     tags: Remove-SNORT
+#     shell: |
+#       yum rm snort -y 
+#       yum rm daq -y
+#       rm -rf -R /etc/snort -y
+#       rm -rf -R /var//log/snort -y
+       
+
+# Downlaod other rules using onikode
+
+# wget https://www.snort.org/rules/snortrules-snapshot-29190.tar.gz?oinkcode=97aa971f0be503276d217d10583de62a4de66b84 -O ~/registered.tar.gz
