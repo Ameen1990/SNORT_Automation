@@ -1,7 +1,7 @@
 ---
 - name: Update the machine
   tags: upd
-  command: apt-get update -y
+  shell: apt-get update -y
 
 - name: Install General Essential packages
   tags: essentials
@@ -40,7 +40,7 @@
 
 
 - name: Clear the Cache
-  command: apt-get clean all
+  shell: apt-get clean all
 
 #- meta: end_play
 
@@ -53,7 +53,7 @@
 
 
 - name: Install lib-daq Binaries
-  command: |
+  shell: |
     ./bootstrap
     ./configure --prefix=/usr/local/lib/daq_s3
     make
@@ -76,7 +76,7 @@
 
  
 - name: Export Snort path
-  command: |
+  shell: |
     mkdir -p {{ snort_path }}
     export my_path={{ snort_path }} 
 
@@ -90,7 +90,7 @@
 
 
 - name: Install SNORT while adding lib-daq path as prefixes
-  command: ./configure_cmake.sh --prefix={{ snort_path }} \
+  shell: ./configure_cmake.sh --prefix={{ snort_path }} \
                                 --with-daq-includes=/usr/local/lib/daq_s3/include/ \
                                 --with-daq-libraries=/usr/local/lib/daq_s3/lib/
   args:
@@ -98,7 +98,7 @@
 
 
 - name: Install SNORT while adding lib-daq path as prefixes
-  command: |
+  shell: |
     make -j $(nproc)
     make install
   args:
@@ -106,16 +106,16 @@
 
 
 - name: Make sure confs are loaded
-  command: ldconfig
+  shell: ldconfig
 
 
 - name: Check ups if successfully installed
-  command: '{{ snort_path }}/bin/snort -V'
+  shell: '{{ snort_path }}/bin/snort -V'
 
 - name: Check ups if daq list are delivered
-  command: '{{ snort_path }}/bin/snort --daq-list'
+  shell: '{{ snort_path }}/bin/snort --daq-list'
 
 - name: Adding alias for snort
-  command: alias snort='{{ snort_path }}/bin/snort'
+  shell: alias snort='{{ snort_path }}/bin/snort'
 
 - meta: end_play
