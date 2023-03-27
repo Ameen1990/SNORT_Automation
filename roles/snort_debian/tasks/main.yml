@@ -63,10 +63,12 @@
 
 
 - name: Make sure daq confs are loaded
-  shell: |
-    export PATH=$PATH:/usr/sbin
-    ldconfig
+  shell: export PATH=$PATH:/usr/sbin
 
+- name: Make sure daq confs are loaded
+  shell: ldconfig
+
+    
 
 - name: Set Snort Path
   set_fact:
