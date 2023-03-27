@@ -60,8 +60,11 @@
   args:
     chdir: /root/libdaq
 
+
 - name: Make sure daq confs are loaded
-  command: ldconfig
+  command: |
+    export PATH=$PATH:/usr/sbin
+    ldconfig
 
 
 - name: Set Snort Path
