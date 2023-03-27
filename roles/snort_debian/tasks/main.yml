@@ -9,6 +9,7 @@
     name:
       - ssh
       - gcc
+      - build-essential
       - libpcre3-dev
       - zlib1g-dev
       - libluajit-5.1-dev
