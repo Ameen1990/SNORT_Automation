@@ -108,6 +108,7 @@
 - name: Check ups if daq list are delivered
   command: '{{ snort_path }}/bin/snort --daq-list'
 
-
+- name: Adding alias for snort
+  command: alias snort='{{ snort_path }}/bin/snort'
 
 - meta: end_play
