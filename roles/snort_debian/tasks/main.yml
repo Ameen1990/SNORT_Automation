@@ -70,9 +70,9 @@
  
 - name: Export Snort path
   command: |
-    export my_path={{ snort_path }}
     mkdir -p {{ snort_path }}
-   
+    export my_path={{ snort_path }} 
+
 
 - name: downlaod SNORT-3 repo
   git:
@@ -80,7 +80,6 @@
     dest: /root/snort3
     clone: yes
     update: yes
-
 
 
 - name: Install SNORT while adding lib-daq path as prefixes
