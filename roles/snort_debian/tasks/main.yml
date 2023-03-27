@@ -62,7 +62,7 @@
 
 
 - name: Make sure daq confs are loaded
-  command: |
+  shell: |
     export PATH=$PATH:/usr/sbin
     ldconfig
 
