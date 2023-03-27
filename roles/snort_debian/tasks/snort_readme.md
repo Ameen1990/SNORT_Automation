@@ -14,3 +14,9 @@ For example: -
 `
 export PATH=$PATH:/usr/sbin
 `
+
+## Add alias
+
+`
+alias snort='/path/to/bin/snort
+`
