@@ -1,0 +1,114 @@
+---
+- name: Update the machine
+  tags: upd
+  command: apt-get update -y
+
+- name: Install General Essential packages
+  tags: essentials
+  apt:
+    name:
+      - gcc
+      - libpcre3-dev
+      - zlib1g-dev
+      - libluajit-5.1-dev
+      - libpcap-dev
+      - openssl
+      - libssl-dev
+      - libnghttp2-dev
+      - libdumbnet-dev
+      - bison
+      - flex
+      - libdnet
+      - autoconf
+      - libtool
+      - tar
+      - nano
+      - net-tools
+      - cmake
+      - libhwloc-dev
+      - libxext-dev
+      - libpng-dev
+      - libimlib2-dev
+      - libglew-dev
+      - libxrender-dev
+      - libxrandr-dev
+      - libglm-dev
+      - libc-bin
+    state: latest
+
+
+- name: Clear the Cache
+  command: apt-get clean all
+
+#- meta: end_play
+
+- name: downlaod lib-daq library
+  git:
+    repo: https://github.com/snort3/libdaq.git
+    dest: /root/libdaq
+    clone: yes
+    update: yes
+
+
+- name: Install lib-daq Binaries
+  command: |
+    ./bootstrap
+    ./configure --prefix=/usr/local/lib/daq_s3
+    make
+    make install
+  args:
+    chdir: /root/libdaq
+
+- name: Make sure daq confs are loaded
+  command: ldconfig
+
+
+- name: Set Snort Path
+  set_fact:
+    snort_path: '/etc/snort'
+
+ 
+- name: Export Snort path
+  command: |
+    export my_path={{ snort_path }}
+    mkdir -p {{ snort_path }}
+   
+
+- name: downlaod SNORT-3 repo
+  git:
+    repo: https://github.com/snort3/snort3.git
+    dest: /root/snort3
+    clone: yes
+    update: yes
+
+
+
+- name: Install SNORT while adding lib-daq path as prefixes
+  command: ./configure_cmake.sh --prefix={{ snort_path }} \
+                                --with-daq-includes=/usr/local/lib/daq_s3/include/ \
+                                --with-daq-libraries=/usr/local/lib/daq_s3/lib/
+  args:
+    chdir: /root/snort3
+
+
+- name: Install SNORT while adding lib-daq path as prefixes
+  command: |
+    make -j $(nproc)
+    make install
+  args:
+    chdir: /root/snort3/build
+
+
+- name: Make sure confs are loaded
+  command: ldconfig
+
+
+- name: Check ups if successfully installed
+  command: '{{ snort_path }}/bin/snort -V'
+
+- name: Check ups if daq list are delivered
+  command: '{{ snort_path }}/bin/snort --daq-list'
+
+
+
+- meta: end_play

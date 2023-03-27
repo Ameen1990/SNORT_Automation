@@ -1,0 +1,15 @@
+---
+- hosts: localhost
+  gather_facts: yes
+  connection: local
+
+  tasks:
+  - include_role:
+      name: snort_debian
+    when:
+      - ansible_distribution == 'Debian'
+
+  - include_role:
+      name: snort_centos
+    when:
+      - ansible_distribution == 'Centos'
