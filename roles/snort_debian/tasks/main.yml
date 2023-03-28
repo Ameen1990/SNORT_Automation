@@ -10,6 +10,7 @@
       - ssh
       - gcc
       - build-essential
+      - g++
       - libpcre3-dev
       - zlib1g-dev
       - libluajit-5.1-dev
