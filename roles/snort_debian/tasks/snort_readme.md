@@ -40,3 +40,12 @@ snort -T -c /etc/snort/snort.conf
 `
 snort -Q --daq dump -q  -R icmpv6_spoof.rules
 `
+
+
+## Snort 3
+
+
+`
+alias snort='/path/to/bin/snort --daq-dir /usr/local/lib/daq_s3/lib/daq'
+`
+
