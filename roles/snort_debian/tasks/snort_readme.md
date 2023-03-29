@@ -45,7 +45,38 @@ snort -Q --daq dump -q  -R icmpv6_spoof.rules
 ## Snort 3
 
 
+# To make sure the Snort 3 install knows where to find the appropriate LibDAQ that we installed earlier.
+
+# LibDAQ is the "Data Acquisition Library", and at a high-level, it's an abstraction layer used by "modules" to communicate
+
+# with both hardware and software network data sources.
+
+
 `
-alias snort='/path/to/bin/snort --daq-dir /usr/local/lib/daq_s3/lib/daq'
+alias snort='/etc/snort/bin/snort --daq-dir /usr/local/lib/daq_s3/lib/daq'
 `
 
+
+
+`snort --list-modules
+`
+
+
+`snort --help-module http_inspect 
+`
+
+
+`snort --help-module http_uri
+`
+
+
+`snort --help-config | grep http
+`
+
+
+
+
+``
+
+
+``
