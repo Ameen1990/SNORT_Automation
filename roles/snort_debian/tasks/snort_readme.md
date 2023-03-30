@@ -82,4 +82,7 @@ snort -Q --daq afpacket -i "ens34:ens35"
 `
 
 
-``
+`
+snort -c $my_path/ect/snort/snort.lua
+`
+
