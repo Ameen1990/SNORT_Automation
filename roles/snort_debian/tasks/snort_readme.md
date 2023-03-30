@@ -79,7 +79,7 @@ alias snort='/etc/snort/bin/snort --daq-dir /usr/local/lib/daq_s3/lib/daq'
 
 
 `
-export my_path=/ect/snort
+export my_path=/etc/snort
 `
 
 `
