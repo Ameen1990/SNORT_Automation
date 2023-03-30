@@ -92,6 +92,31 @@ snort -c $my_path/etc/snort/snort.lua
 `
 
 
+## In case of one set of rules, no need to add it in "snort.lua" file
+
 `
 snort -c $my_path/etc/snort/snort.lua -R icmp.rules -Q --daq afpacket -i "ens34:ens35
 `
+## You can also add it if you want
+
+`
+ips = { include = 'malware.rules' }
+`
+
+
+## In case of multiple rules required
+
+Add the followings to the snort.lua file
+
+`
+ips = 
+{
+    rules = [[
+        include /path/to/rulesfile1.rules
+        include /path/to/rulesfile2.rules
+        …
+    ]]
+}
+`
+
+``
