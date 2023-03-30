@@ -37,6 +37,7 @@
       - libxrandr-dev
       - libglm-dev
       - libc-bin
+      - tree
     state: latest
 
 
