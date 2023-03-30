@@ -77,6 +77,11 @@ alias snort='/etc/snort/bin/snort --daq-dir /usr/local/lib/daq_s3/lib/daq'
 
 ## Inline Mode
 
+
+`
+export my_path=/ect/snort
+`
+
 `
 snort -Q --daq afpacket -i "ens34:ens35"
 `
