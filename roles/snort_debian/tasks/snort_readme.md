@@ -124,5 +124,5 @@ ips =
 
 
 `
-snort -c $my_path/etc/snort/snort.lua -R icmp.rules -Q --daq afpacket -i "ens34:ens35 -A alert_talos
+snort -c $my_path/etc/snort/snort.lua -R icmp.rules -Q --daq afpacket -i "ens34:ens35" -A alert_talos
 `
