@@ -88,6 +88,10 @@ snort -Q --daq afpacket -i "ens34:ens35"
 
 
 `
-snort -c $my_path/ect/snort/snort.lua
+snort -c $my_path/etc/snort/snort.lua
 `
 
+
+`
+snort -c $my_path/etc/snort/snort.lua -R icmp.rules -Q --daq afpacket -i "ens34:ens35
+`
