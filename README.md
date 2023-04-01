@@ -10,26 +10,32 @@ The main part is editing the "/etc/snort/snort.conf"  file.
 
 ## Howto
 
-Install git
 
-Pull the repository
+
+
+Install git
 
 `
 apt-get install git -y
 `
 
+Install Anisble
+
 `
 apt-get install ansible -y
 `
 
+Pull the repository
 
 `
-git clone 
+git clone https://github.com/ameen-mcmxc/SNORT_Automation.git
 `
 
 `
 cd SNORT_Automation
 `
+
+Run the main playbook to install Snort
 
 `
 ansible-playbook snort.yml
