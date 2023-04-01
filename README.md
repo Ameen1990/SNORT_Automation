@@ -9,6 +9,11 @@ The code also contains creating essential folders and files.
 
 ## Howto (for Debain)
 
+Update the machine
+
+`
+apt-get update -y
+`
 
 Install git
 
